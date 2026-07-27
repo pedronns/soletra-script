@@ -1,7 +1,15 @@
 const fs = require("fs");
 
 const OBRIGATORIA = "v";
-const LETRAS = new Set(["a", "e", "f", "i", "o", "t", OBRIGATORIA]);
+
+const LETRAS = new Set([
+  OBRIGATORIA,
+  "a",
+  "e",
+  "f",
+  "i",
+  "o",
+  "t"]);
 const MIN = 4;
 
 // Remove acentos, mas preserva o ç
