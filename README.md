@@ -1,106 +1,46 @@
-# Script Soletra
+# Soletra
 
-Um script em **Node.js** para encontrar todas as palavras válidas de um desafio do jogo **Soletra**, utilizando um dicionário Hunspell (`.dic`).
-
-O programa filtra as palavras de acordo com as letras disponíveis, exige uma letra obrigatória e organiza o resultado por quantidade de letras.
-
-## Funcionalidades
-
-- Filtragem por letras permitidas.
-- Letra obrigatória.
-- Tamanho mínimo configurável.
-- Suporte a dicionários `.dic` (Hunspell/LibreOffice).
-- Remoção de acentos para validação, preservando o `ç`.
-- Remoção de palavras duplicadas.
-- Ordenação por tamanho e ordem alfabética.
-- Agrupamento das palavras por quantidade de letras.
+Script em Node.js que procura, no dicionário local, palavras formadas apenas pelas letras escolhidas para uma rodada do jogo Soletra. Cada palavra precisa conter também a letra obrigatória.
 
 ## Requisitos
 
-- Node.js 18 ou superior.
+- Node.js instalado.
+- O arquivo `dicionario.txt` na raiz do projeto.
 
-## Configuração
+## Executar
 
-Edite as constantes no início do arquivo:
-
-```js
-const OBRIGATORIA = "z";
-const LETRAS = new Set(["a", "b", "d", "i", "r", "u", OBRIGATORIA]);
-const MIN = 6;
-```
-
-- **OBRIGATORIA**: letra que deve estar presente em todas as palavras.
-- **LETRAS**: conjunto de letras permitidas.
-- **MIN**: quantidade mínima de letras.
-
-> **Importante:** `OBRIGATORIA` também deve fazer parte do conjunto `LETRAS`. No exemplo acima, ela é adicionada diretamente ao `Set`, evitando duplicação e possíveis inconsistências.
-
-## Dicionário
-
-O script utiliza um arquivo Hunspell (`.dic`), como o `pt_BR.dic` do LibreOffice.
-
-Durante a leitura, o programa:
-
-- ignora automaticamente a primeira linha (quantidade de entradas);
-- remove as flags morfológicas (texto após `/`);
-- converte todas as palavras para minúsculas;
-- remove entradas duplicadas.
-
-Exemplo:
-
-```text
-abacate/SM
-abacaxi
-abafar/V
-```
-
-É interpretado como:
-
-```text
-abacate
-abacaxi
-abafar
-```
-
-## Execução
+No terminal, na pasta do projeto:
 
 ```bash
 node index.js
 ```
 
-## Exemplo de saída
+Informe as letras disponíveis e, em seguida, a letra obrigatória. A letra obrigatória precisa estar entre as letras disponíveis; se não estiver, o programa informa o erro e encerra.
+
+## Regras de busca
+
+- As letras e palavras são convertidas para minúsculas.
+- Cada palavra deve ter pelo menos 4 letras, conforme a regra do `g1.globo.com/jogos/soletra/`.
+- Todas as letras da palavra devem estar entre as letras informadas.
+- A palavra deve conter a letra obrigatória.
+- Para validar as palavras do dicionário, os acentos são removidos, mas `ç` é preservado como uma letra diferente de `c`. Digite as letras disponíveis e a letra obrigatória sem acentos.
+- Entradas repetidas no dicionário são descartadas.
+- Os grupos de resultados são ordenados pelo tamanho e, em seguida, alfabeticamente em português. Grafias equivalentes após a remoção dos acentos ficam juntas, mantendo a grafia original do dicionário.
+
+## Dicionário
+
+O programa lê `dicionario.txt` como texto UTF-8, uma entrada por linha. A primeira linha é ignorada (normalmente contém a quantidade de entradas); nas linhas seguintes, qualquer conteúdo após `/` é tratado como flag e removido. Espaços em volta das entradas também são descartados.
+
+Por exemplo, `abacate/SM` é lido como `abacate`. Mantenha o dicionário na raiz do projeto, pois o script procura o arquivo pelo caminho relativo `dicionario.txt`.
+
+## Resultados
+
+As palavras são exibidas em grupos pelo número de letras. Formas que ficam iguais após a remoção dos acentos aparecem juntas, separadas por `/`. O número no cabeçalho conta os grupos daquele tamanho, e o total final conta todos os grupos, não cada grafia individual.
 
 ```text
-=== Palavras com 4 letras (12) ===
+=== Palavras com 5 letras (1) ===
 
-avóe
-...
+pônei
 
-=== Palavras com 5 letras (8) ===
-
-ativo
-...
-
-=== Palavras com 6 letras (3) ===
-
-afetivo
-
-Total de palavras: 23
+Total de palavras: 1
 ```
-
-## Como funciona
-
-1. Lê o dicionário Hunspell (`.dic`).
-2. Ignora a primeira linha e remove as flags morfológicas.
-3. Remove acentos, preservando o `ç`.
-4. Descarta palavras menores que o tamanho mínimo.
-5. Verifica se a palavra contém a letra obrigatória.
-6. Confirma que todas as letras pertencem ao conjunto permitido.
-7. Remove palavras duplicadas.
-8. Ordena por tamanho e ordem alfabética.
-9. Agrupa as palavras por quantidade de letras.
-10. Exibe todas as palavras encontradas.
-
-## Licença
-
-Este projeto está licenciado sob a licença MIT.

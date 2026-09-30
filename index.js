@@ -1,16 +1,5 @@
 const fs = require("fs");
-
-const OBRIGATORIA = "v";
-
-const LETRAS = new Set([
-  OBRIGATORIA,
-  "a",
-  "e",
-  "f",
-  "i",
-  "o",
-  "t"]);
-const MIN = 4;
+const readline = require("readline");
 
 // Remove acentos, mas preserva o ç
 function normalizar(str) {
@@ -24,57 +13,102 @@ function normalizar(str) {
     .normalize("NFC");
 }
 
-const palavras = fs
-  .readFileSync("dicionario.txt", "utf8")
-  .split(/\r?\n/)
-  .slice(1) // remove a primeira linha (quantidade de palavras)
-  .map(linha => linha.split("/")[0]) // remove as flags
-  .map(p => p.trim().toLowerCase())
-  .filter(Boolean);
-
-const validas = [];
-const vistas = new Set();
-
-for (const original of palavras) {
-  if (vistas.has(original)) continue;
-  vistas.add(original);
-
-  const palavra = normalizar(original);
-
-  if (palavra.length < MIN) continue;
-  if (!palavra.includes(OBRIGATORIA)) continue;
-
-  if ([...palavra].every(letra => LETRAS.has(letra))) {
-    validas.push(original);
-  }
-}
-
-validas.sort((a, b) => {
-  if (a.length !== b.length) {
-    return a.length - b.length;
-  }
-
-  return a.localeCompare(b, "pt-BR");
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
 });
 
-const grupos = new Map();
+rl.question("Digite as letras disponíveis: ", (entradaLetras) => {
+  rl.question("Digite a letra obrigatória: ", (entradaObrigatoria) => {
+    const LETRAS = new Set(entradaLetras.trim().toLowerCase());
+    const OBRIGATORIA = entradaObrigatoria.trim().toLowerCase();
+    const MIN_LENGTH = 4;
 
-for (const palavra of validas) {
-  const tamanho = palavra.length;
+    if (!LETRAS.has(OBRIGATORIA)) {
+      console.log(
+        "Erro: a letra obrigatória precisa estar entre as letras disponíveis."
+      );
 
-  if (!grupos.has(tamanho)) {
-    grupos.set(tamanho, []);
-  }
+      rl.close();
+      return;
+    }
 
-  grupos.get(tamanho).push(palavra);
-}
+    const palavras = fs
+      .readFileSync("dicionario.txt", "utf8")
+      .split(/\r?\n/)
+      .slice(1)
+      .map((linha) => linha.split("/")[0])
+      .map((p) => p.trim().toLowerCase())
+      .filter(Boolean);
 
-for (const [tamanho, lista] of grupos) {
-  console.log(`\n=== Palavras com ${tamanho} letras (${lista.length}) ===\n`);
+    const validas = [];
+    const vistas = new Set();
 
-  for (const palavra of lista) {
-    console.log(palavra);
-  }
-}
+    for (const original of palavras) {
+      if (vistas.has(original)) continue;
 
-console.log(`\nTotal de palavras: ${validas.length}`);
+      vistas.add(original);
+
+      const palavra = normalizar(original);
+
+      if (palavra.length < MIN_LENGTH) continue;
+      if (!palavra.includes(OBRIGATORIA)) continue;
+
+      if ([...palavra].every((letra) => LETRAS.has(letra))) {
+        validas.push(original);
+      }
+    }
+
+    // Agrupa palavras que são iguais após a remoção dos acentos
+    const grupos = new Map();
+
+    for (const palavra of validas) {
+      const chave = normalizar(palavra);
+
+      if (!grupos.has(chave)) {
+        grupos.set(chave, []);
+      }
+
+      grupos.get(chave).push(palavra);
+    }
+
+    // Ordena os grupos por tamanho e depois alfabeticamente
+    const gruposOrdenados = [...grupos.entries()].sort(
+      ([chaveA], [chaveB]) => {
+        if (chaveA.length !== chaveB.length) {
+          return chaveA.length - chaveB.length;
+        }
+
+        return chaveA.localeCompare(chaveB, "pt-BR");
+      }
+    );
+
+    // Agrupa os grupos por tamanho
+    const gruposPorTamanho = new Map();
+
+    for (const [chave, palavrasGrupo] of gruposOrdenados) {
+      const tamanho = chave.length;
+
+      if (!gruposPorTamanho.has(tamanho)) {
+        gruposPorTamanho.set(tamanho, []);
+      }
+
+      gruposPorTamanho.get(tamanho).push(palavrasGrupo);
+    }
+
+    for (const [tamanho, gruposDoTamanho] of gruposPorTamanho) {
+      console.log(
+        `\n=== Palavras com ${tamanho} letras (${gruposDoTamanho.length}) ===\n`
+      );
+
+      for (const grupo of gruposDoTamanho) {
+        console.log(grupo.join("/"));
+      }
+    }
+
+    // Cada grupo conta como uma única palavra
+    console.log(`\nTotal de palavras: ${grupos.size}`);
+
+    rl.close();
+  });
+});
